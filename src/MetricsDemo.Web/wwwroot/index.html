@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics Demo Console</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◆</span>
+      <div>
+        <h1>Metrics Demo</h1>
+        <p class="tagline">White-box metric sandbox · orders · validation · pricing</p>
+      </div>
+    </div>
+    <span class="pill" id="healthPill">checking…</span>
+  </header>
+
+  <main class="grid">
+    <section class="card" id="card-order">
+      <h2>Order processing</h2>
+      <p class="hint">Exercises branch-heavy C# (<code>OrderProcessingService</code>).</p>
+      <form id="form-order">
+        <label>Customer ID <input name="customerId" value="C-1001" required /></label>
+        <label>Tier
+          <select name="tier">
+            <option>gold</option>
+            <option>silver</option>
+            <option>bronze</option>
+          </select>
+        </label>
+        <label>Subtotal <input name="subtotal" type="number" step="0.01" value="249.99" /></label>
+        <label>Item count <input name="itemCount" type="number" value="6" /></label>
+        <label class="row"><input name="isWeekend" type="checkbox" /> Weekend order</label>
+        <label>Payment
+          <select name="paymentMethod">
+            <option>card</option>
+            <option>paypal</option>
+            <option>invoice</option>
+          </select>
+        </label>
+        <label>Coupon <input name="couponCode" placeholder="SAVE10" /></label>
+        <button type="submit">Process order</button>
+      </form>
+      <pre class="out" id="out-order" aria-live="polite"></pre>
+    </section>
+
+    <section class="card" id="card-user">
+      <h2>User validation</h2>
+      <p class="hint">Nested validation paths (<code>UserValidationService</code>).</p>
+      <form id="form-user">
+        <label>Email <input name="email" type="email" value="demo@example.com" /></label>
+        <label>Display name <input name="displayName" value="Demo User" /></label>
+        <label>Age <input name="age" type="number" value="28" /></label>
+        <label>Country <input name="countryCode" value="US" maxlength="2" /></label>
+        <label class="row"><input name="acceptsMarketing" type="checkbox" /> Accepts marketing</label>
+        <label>Phone <input name="phone" value="+1 555 0100" /></label>
+        <button type="submit">Validate</button>
+      </form>
+      <pre class="out" id="out-user" aria-live="polite"></pre>
+    </section>
+
+    <section class="card" id="card-misc">
+      <h2>Pricing &amp; shipping</h2>
+      <p class="hint">Duplicated ladder logic across services.</p>
+      <div class="split">
+        <form id="form-price">
+          <h3>Inventory line</h3>
+          <label>SKU <input name="sku" value="SKU-B" /></label>
+          <label>Qty <input name="qty" type="number" value="4" /></label>
+          <label>Region
+            <select name="region">
+              <option>NA</option>
+              <option>EU</option>
+              <option>APAC</option>
+            </select>
+          </label>
+          <button type="submit">Price</button>
+        </form>
+        <form id="form-ship">
+          <h3>Shipping</h3>
+          <label>Weight (kg) <input name="weightKg" type="number" step="0.1" value="12.5" /></label>
+          <label>Zone
+            <select name="zone">
+              <option>NA</option>
+              <option>EU</option>
+              <option>APAC</option>
+            </select>
+          </label>
+          <label class="row"><input name="express" type="checkbox" /> Express</label>
+          <button type="submit">Quote</button>
+        </form>
+      </div>
+      <pre class="out" id="out-price" aria-live="polite"></pre>
+      <pre class="out" id="out-ship" aria-live="polite"></pre>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Built for cyclomatic / cognitive / duplication tooling demos.</span>
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
