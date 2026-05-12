@@ -10,6 +10,8 @@ builder.Services.AddSingleton<NPlusOneCatalogService>();
 builder.Services.AddSingleton<NestedLoopDepthService>();
 builder.Services.AddSingleton<LoopHeapAllocationService>();
 builder.Services.AddSingleton<ConcurrentBalanceService>();
+builder.Services.AddSingleton<UnsafeRequestCounterService>();
+builder.Services.AddSingleton<ModerateNestedKernelService>();
 builder.Services.AddSingleton<CyclomaticHotspotService>();
 
 var app = builder.Build();
@@ -51,14 +53,27 @@ app.MapGet("/api/metrics/nested-loops", (int? dim, int? threshold, NestedLoopDep
     var d = dim.GetValueOrDefault(8);
     var t = threshold.GetValueOrDefault(12);
     var matches = svc.CountDeepMatches(d, t);
-    return Results.Json(new { dim = d, threshold = t, matches });
+    return Results.Json(new { tier = "depth2", dim = d, threshold = t, matches });
 });
 
-app.MapGet("/api/metrics/loop-alloc", (int? rounds, LoopHeapAllocationService svc) =>
+app.MapGet("/api/metrics/nested-loops-triple", (int? n, ModerateNestedKernelService svc) =>
+{
+    var dim = n.GetValueOrDefault(12);
+    var checksum = svc.TripleLoopChecksum(dim);
+    return Results.Json(new { tier = "depth3", n = dim, checksum });
+});
+
+app.MapGet("/api/metrics/loop-alloc", (int? rounds, string? profile, LoopHeapAllocationService svc) =>
 {
     var r = rounds.GetValueOrDefault(4);
-    var result = svc.AccumulateLargeBlocks(r);
-    return Results.Json(new { rounds = result.Rounds, checksum = result.ByteSum });
+    var result = svc.Run(r, profile);
+    return Results.Json(new
+    {
+        result.Rounds,
+        result.Profile,
+        result.BlockSize,
+        checksum = result.ByteSum,
+    });
 });
 
 app.MapPost("/api/metrics/balance", (BalanceDeltaDto body, ConcurrentBalanceService svc) =>
@@ -86,5 +101,11 @@ app.MapGet("/api/metrics/risk-class", (
         errorRateBp,
         paymentRail,
     }));
+
+app.MapPost("/api/metrics/unsafe-counter/bump", (UnsafeRequestCounterService svc) =>
+{
+    var v = svc.Bump();
+    return Results.Json(new { hits = v });
+});
 
 app.Run();

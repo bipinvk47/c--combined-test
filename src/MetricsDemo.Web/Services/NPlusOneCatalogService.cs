@@ -1,25 +1,26 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Demonstrates classic N+1 load: outer enumeration with a per-item lookup/query inside the loop.
-/// Static analyzers flag the repeated work per parent entity as N+1 risk.
+/// Strong N+1 surface: repeated full scans per parent id (multiple inner queries per loop).
 /// </summary>
 public sealed class NPlusOneCatalogService
 {
     private readonly IReadOnlyList<OrderWithLines> _orders;
+    private readonly IReadOnlyList<ShippingRecord> _shipping;
 
     public NPlusOneCatalogService()
     {
         _orders = BuildSeedData();
+        _shipping = BuildShippingRows();
     }
 
     /// <summary>
-    /// For each order header we scan all line items again (intentional N+1-shaped pattern).
+    /// For each order id: full table scans for lines and again for shipping (N+1-shaped).
     /// </summary>
-    public IReadOnlyList<decimal> GetOrderTotalsNaive(string customerId)
+    public IReadOnlyList<OrderRollupDto> GetOrderTotalsNaive(string customerId)
     {
         if (string.IsNullOrWhiteSpace(customerId))
-            return Array.Empty<decimal>();
+            return Array.Empty<OrderRollupDto>();
 
         var normalized = customerId.Trim();
         var headers = _orders
@@ -27,23 +28,30 @@ public sealed class NPlusOneCatalogService
             .Select(o => o.OrderId)
             .ToList();
 
-        var totals = new List<decimal>(headers.Count);
+        var rollups = new List<OrderRollupDto>(headers.Count);
         foreach (var orderId in headers)
         {
-            decimal sum = 0;
+            decimal linesTotal = 0;
             foreach (var row in _orders)
             {
                 foreach (var line in row.Lines)
                 {
                     if (line.OrderId == orderId)
-                        sum += line.Amount;
+                        linesTotal += line.Amount;
                 }
             }
 
-            totals.Add(sum);
+            decimal shipFee = 0;
+            foreach (var ship in _shipping)
+            {
+                if (ship.OrderId == orderId)
+                    shipFee += ship.Fee;
+            }
+
+            rollups.Add(new OrderRollupDto(orderId, linesTotal, shipFee));
         }
 
-        return totals;
+        return rollups;
     }
 
     private static IReadOnlyList<OrderWithLines> BuildSeedData()
@@ -65,7 +73,21 @@ public sealed class NPlusOneCatalogService
         };
     }
 
+    private static IReadOnlyList<ShippingRecord> BuildShippingRows()
+    {
+        return new List<ShippingRecord>
+        {
+            new(1, 4.5m),
+            new(2, 3m),
+            new(3, 12m),
+        };
+    }
+
     private sealed record OrderWithLines(int OrderId, string CustomerId, IReadOnlyList<LineRecord> Lines);
 
     private sealed record LineRecord(int OrderId, decimal Amount);
+
+    private sealed record ShippingRecord(int OrderId, decimal Fee);
 }
+
+public sealed record OrderRollupDto(int OrderId, decimal LinesTotal, decimal ShippingFee);

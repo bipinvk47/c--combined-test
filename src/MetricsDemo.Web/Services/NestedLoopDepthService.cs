@@ -1,19 +1,19 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Intentional deep nested loops for Big-O / nested-loop depth tooling (four levels).
+/// Primary surface is depth-2 loops only (lower nested-depth risk vs triple-kernel helper).
 /// </summary>
 public sealed class NestedLoopDepthService
 {
     /// <summary>
-    /// O(n^4) style kernel; dim kept small for demo API safety.
+    /// O(n²) scan over a pre-built matrix.
     /// </summary>
     public long CountDeepMatches(int dim, int threshold)
     {
         if (dim <= 0)
             return 0;
 
-        var safe = Math.Clamp(dim, 1, 12);
+        var safe = Math.Clamp(dim, 1, 64);
         var matrix = BuildMatrix(safe);
         long count = 0;
 
@@ -21,15 +21,9 @@ public sealed class NestedLoopDepthService
         {
             for (var b = 0; b < safe; b++)
             {
-                for (var c = 0; c < safe; c++)
-                {
-                    for (var d = 0; d < safe; d++)
-                    {
-                        var value = matrix[a, b] + matrix[c, d] + (a ^ b ^ c ^ d);
-                        if (value >= threshold)
-                            count++;
-                    }
-                }
+                var value = matrix[a, b] + (a ^ b);
+                if (value >= threshold)
+                    count++;
             }
         }
 
