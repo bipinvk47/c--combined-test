@@ -64,7 +64,7 @@ public sealed class BaselineIdGenerator
 {
     private int _next;
 
-    public int Next() => ++_next;
+    public int Next() => System.Threading.Interlocked.Increment(ref _next);
 }
 
 public sealed class BaselinePlainFacade
