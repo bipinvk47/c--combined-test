@@ -6,6 +6,11 @@ builder.Services.AddSingleton<OrderProcessingService>();
 builder.Services.AddSingleton<UserValidationService>();
 builder.Services.AddSingleton<InventoryPricingService>();
 builder.Services.AddSingleton<ShippingQuoteService>();
+builder.Services.AddSingleton<NPlusOneCatalogService>();
+builder.Services.AddSingleton<NestedLoopDepthService>();
+builder.Services.AddSingleton<LoopHeapAllocationService>();
+builder.Services.AddSingleton<ConcurrentBalanceService>();
+builder.Services.AddSingleton<CyclomaticHotspotService>();
 
 var app = builder.Build();
 
@@ -37,5 +42,49 @@ app.MapGet("/api/shipping/quote", (decimal weightKg, string zone, bool express, 
     var quote = svc.EstimateShipping(weightKg, zone, express);
     return Results.Json(new { weightKg, zone, express, quote });
 });
+
+app.MapGet("/api/metrics/nplus-one", (string customerId, NPlusOneCatalogService svc) =>
+    Results.Json(new { customerId, totals = svc.GetOrderTotalsNaive(customerId ?? string.Empty) }));
+
+app.MapGet("/api/metrics/nested-loops", (int? dim, int? threshold, NestedLoopDepthService svc) =>
+{
+    var d = dim.GetValueOrDefault(8);
+    var t = threshold.GetValueOrDefault(12);
+    var matches = svc.CountDeepMatches(d, t);
+    return Results.Json(new { dim = d, threshold = t, matches });
+});
+
+app.MapGet("/api/metrics/loop-alloc", (int? rounds, LoopHeapAllocationService svc) =>
+{
+    var r = rounds.GetValueOrDefault(4);
+    var result = svc.AccumulateLargeBlocks(r);
+    return Results.Json(new { rounds = result.Rounds, checksum = result.ByteSum });
+});
+
+app.MapPost("/api/metrics/balance", (BalanceDeltaDto body, ConcurrentBalanceService svc) =>
+{
+    svc.RecordDelta(body.Delta);
+    var snap = svc.Snapshot();
+    return Results.Json(new { appliedDelta = body.Delta, balance = snap.Balance, mutations = snap.Mutations });
+});
+
+app.MapGet("/api/metrics/risk-class", (
+        string region,
+        string channel,
+        int loadPct,
+        bool failoverReady,
+        int errorRateBp,
+        string paymentRail,
+        CyclomaticHotspotService svc) =>
+    Results.Json(new
+    {
+        bucket = svc.ClassifyOperationalRisk(region, channel, loadPct, failoverReady, errorRateBp, paymentRail),
+        region,
+        channel,
+        loadPct,
+        failoverReady,
+        errorRateBp,
+        paymentRail,
+    }));
 
 app.Run();

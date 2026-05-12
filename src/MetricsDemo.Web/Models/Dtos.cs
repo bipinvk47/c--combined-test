@@ -16,3 +16,5 @@ public sealed record UserProfileDto(
     string CountryCode,
     bool AcceptsMarketing,
     string? Phone);
+
+public sealed record BalanceDeltaDto(decimal Delta);
