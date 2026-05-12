@@ -1,19 +1,16 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Primary surface is depth-2 loops only (lower nested-depth risk vs triple-kernel helper).
+/// Depth-2 kernel only (no deeper nesting). Intended mid-tier nested-loop metrics vs neutral baseline.
 /// </summary>
 public sealed class NestedLoopDepthService
 {
-    /// <summary>
-    /// O(n²) scan over a pre-built matrix.
-    /// </summary>
     public long CountDeepMatches(int dim, int threshold)
     {
         if (dim <= 0)
             return 0;
 
-        var safe = Math.Clamp(dim, 1, 64);
+        var safe = Math.Clamp(dim, 1, 48);
         var matrix = BuildMatrix(safe);
         long count = 0;
 

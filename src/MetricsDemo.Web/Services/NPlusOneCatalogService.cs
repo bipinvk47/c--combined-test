@@ -1,22 +1,21 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Strong N+1 surface: repeated full scans per parent id (multiple inner queries per loop).
+/// Mid-weight N+1: line totals are pre-aggregated (good), shipping fees still scan the full shipping list per order (one mild N+1 pattern).
 /// </summary>
 public sealed class NPlusOneCatalogService
 {
     private readonly IReadOnlyList<OrderWithLines> _orders;
     private readonly IReadOnlyList<ShippingRecord> _shipping;
+    private readonly Dictionary<int, decimal> _linesTotalByOrderId;
 
     public NPlusOneCatalogService()
     {
         _orders = BuildSeedData();
         _shipping = BuildShippingRows();
+        _linesTotalByOrderId = BuildLineTotals(_orders);
     }
 
-    /// <summary>
-    /// For each order id: full table scans for lines and again for shipping (N+1-shaped).
-    /// </summary>
     public IReadOnlyList<OrderRollupDto> GetOrderTotalsNaive(string customerId)
     {
         if (string.IsNullOrWhiteSpace(customerId))
@@ -31,15 +30,7 @@ public sealed class NPlusOneCatalogService
         var rollups = new List<OrderRollupDto>(headers.Count);
         foreach (var orderId in headers)
         {
-            decimal linesTotal = 0;
-            foreach (var row in _orders)
-            {
-                foreach (var line in row.Lines)
-                {
-                    if (line.OrderId == orderId)
-                        linesTotal += line.Amount;
-                }
-            }
+            var linesTotal = _linesTotalByOrderId.TryGetValue(orderId, out var lt) ? lt : 0m;
 
             decimal shipFee = 0;
             foreach (var ship in _shipping)
@@ -52,6 +43,18 @@ public sealed class NPlusOneCatalogService
         }
 
         return rollups;
+    }
+
+    private static Dictionary<int, decimal> BuildLineTotals(IReadOnlyList<OrderWithLines> orders)
+    {
+        var map = new Dictionary<int, decimal>();
+        foreach (var row in orders)
+        {
+            foreach (var line in row.Lines)
+                map[line.OrderId] = map.GetValueOrDefault(line.OrderId) + line.Amount;
+        }
+
+        return map;
     }
 
     private static IReadOnlyList<OrderWithLines> BuildSeedData()

@@ -1,7 +1,7 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Kept intentionally small (few predicates) so cyclomatic scores sit lower than order/N+1 demos.
+/// Very small classifier — keeps cyclomatic contribution minimal outside business services.
 /// </summary>
 public sealed class CyclomaticHotspotService
 {
@@ -13,16 +13,16 @@ public sealed class CyclomaticHotspotService
         int errorRateBp,
         string paymentRail)
     {
-        if (loadPct > 92 && !failoverReady)
+        if (loadPct > 95 || errorRateBp > 400)
             return "high";
 
-        if (errorRateBp > 250)
-            return "high";
-
-        if (string.IsNullOrWhiteSpace(region) || string.IsNullOrWhiteSpace(channel))
+        if (string.IsNullOrWhiteSpace(region) || !failoverReady)
             return "medium";
 
-        if (paymentRail.Equals("wire", StringComparison.OrdinalIgnoreCase) && loadPct > 75)
+        if (string.Equals(paymentRail, "wire", StringComparison.OrdinalIgnoreCase) && loadPct > 80)
+            return "medium";
+
+        if (string.IsNullOrWhiteSpace(channel))
             return "medium";
 
         return "low";

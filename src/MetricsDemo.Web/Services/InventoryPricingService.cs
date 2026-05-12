@@ -1,7 +1,7 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Duplicated "ladder discount" pattern also appears in <see cref="ShippingQuoteService"/> for duplication scanners.
+/// Compact pricing path — fewer branches than a multi-rung ladder.
 /// </summary>
 public sealed class InventoryPricingService
 {
@@ -12,27 +12,17 @@ public sealed class InventoryPricingService
 
         var unit = ResolveUnitPrice(sku);
         var subtotal = unit * quantity;
+        var ladder = subtotal >= 500 ? subtotal * 0.10m : (subtotal >= 100 ? subtotal * 0.05m : 0m);
 
-        var ladder = 0m;
-        if (subtotal >= 1000)
-            ladder = subtotal * 0.18m;
-        else if (subtotal >= 500)
-            ladder = subtotal * 0.12m;
-        else if (subtotal >= 200)
-            ladder = subtotal * 0.07m;
-        else if (subtotal >= 50)
-            ladder = subtotal * 0.03m;
+        var reg = region?.Trim().ToUpperInvariant() ?? string.Empty;
+        var regional = reg switch
+        {
+            "EU" => subtotal * 0.02m,
+            "APAC" => subtotal * 0.015m,
+            _ => subtotal * 0.01m,
+        };
 
-        var regional = 0m;
-        if (region.Equals("EU", StringComparison.OrdinalIgnoreCase))
-            regional = subtotal * 0.02m;
-        else if (region.Equals("APAC", StringComparison.OrdinalIgnoreCase))
-            regional = subtotal * 0.015m;
-        else if (region.Equals("NA", StringComparison.OrdinalIgnoreCase))
-            regional = subtotal * 0.01m;
-
-        var total = subtotal - ladder + regional;
-        return Math.Round(total, 2);
+        return Math.Round(subtotal - ladder + regional, 2);
     }
 
     private static decimal ResolveUnitPrice(string sku)
@@ -45,7 +35,7 @@ public sealed class InventoryPricingService
             "SKU-A" => 12.5m,
             "SKU-B" => 24m,
             "SKU-C" => 7.25m,
-            _ => 10m
+            _ => 10m,
         };
     }
 }
