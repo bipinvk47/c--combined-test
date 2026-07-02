@@ -1,4 +1,5 @@
 const $ = (sel) => document.querySelector(sel);
+const TRIGGER_TAG = "push-001";
 
 async function refreshHealth() {
   const pill = $("#healthPill");
