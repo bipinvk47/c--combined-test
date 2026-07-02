@@ -25,7 +25,15 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok", app = "MetricsDemo", trigger = "push-001", branch = "dev", version = "1.0.1" }));
+app.MapGet("/api/health", () => Results.Ok(new
+{
+    status = "ok",
+    app = "MetricsDemo",
+    trigger = "push-001",
+    branch = "dev",
+    version = "1.0.2",
+    checkedAt = DateTimeOffset.UtcNow,
+}));
 
 app.MapPost("/api/orders/process", (OrderRequest req, OrderProcessingService svc) =>
 {

@@ -7,7 +7,7 @@ async function refreshHealth() {
     const res = await fetch("/api/health");
     const data = await res.json();
     pill.textContent = data.status === "ok"
-      ? `API healthy${data.branch ? ` · ${data.branch}` : ""}`
+      ? `API healthy${data.branch ? ` · ${data.branch}` : ""}${data.version ? ` · v${data.version}` : ""}`
       : "degraded";
     pill.classList.toggle("ok", data.status === "ok");
   } catch {

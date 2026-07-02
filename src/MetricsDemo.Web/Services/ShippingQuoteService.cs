@@ -11,7 +11,12 @@ public sealed class ShippingQuoteService
             return 0;
 
         var baseRate = weightKg * 3.5m + (express ? 12m : 0m);
-        var discount = baseRate >= 300 ? baseRate * 0.08m : (baseRate >= 120 ? baseRate * 0.04m : 0m);
+        var discount = baseRate switch
+        {
+            >= 300 => baseRate * 0.08m,
+            >= 120 => baseRate * 0.04m,
+            _ => 0m,
+        };
 
         var z = zone?.Trim().ToUpperInvariant() ?? string.Empty;
         var lift = z switch

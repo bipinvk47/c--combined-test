@@ -12,7 +12,12 @@ public sealed class InventoryPricingService
 
         var unit = ResolveUnitPrice(sku);
         var subtotal = unit * quantity;
-        var ladder = subtotal >= 500 ? subtotal * 0.10m : (subtotal >= 100 ? subtotal * 0.05m : 0m);
+        var ladder = subtotal switch
+        {
+            >= 500 => subtotal * 0.10m,
+            >= 100 => subtotal * 0.05m,
+            _ => 0m,
+        };
 
         var reg = region?.Trim().ToUpperInvariant() ?? string.Empty;
         var regional = reg switch
