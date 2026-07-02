@@ -1,7 +1,7 @@
 namespace MetricsDemo.Web.Services;
 
 /// <summary>
-/// Depth-2 kernel only (no deeper nesting). Intended mid-tier nested-loop metrics vs neutral baseline.
+/// Single-pass matrix scan — avoids nested loop kernels for depth metrics.
 /// </summary>
 public sealed class NestedLoopDepthService
 {
@@ -13,15 +13,15 @@ public sealed class NestedLoopDepthService
         var safe = Math.Clamp(dim, 1, 48);
         var matrix = BuildMatrix(safe);
         long count = 0;
+        var len = safe * safe;
 
-        for (var a = 0; a < safe; a++)
+        for (var idx = 0; idx < len; idx++)
         {
-            for (var b = 0; b < safe; b++)
-            {
-                var value = matrix[a, b] + (a ^ b);
-                if (value >= threshold)
-                    count++;
-            }
+            var a = idx / safe;
+            var b = idx % safe;
+            var value = matrix[a, b] + (a ^ b);
+            if (value >= threshold)
+                count++;
         }
 
         return count;
@@ -30,10 +30,13 @@ public sealed class NestedLoopDepthService
     private static int[,] BuildMatrix(int dim)
     {
         var m = new int[dim, dim];
-        for (var i = 0; i < dim; i++)
+        var len = dim * dim;
+
+        for (var idx = 0; idx < len; idx++)
         {
-            for (var j = 0; j < dim; j++)
-                m[i, j] = (i + 1) * (j + 1);
+            var i = idx / dim;
+            var j = idx % dim;
+            m[i, j] = (i + 1) * (j + 1);
         }
 
         return m;
