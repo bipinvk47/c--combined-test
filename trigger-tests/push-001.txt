@@ -1,3 +1,4 @@
 push trigger test 001
 
 need to test the trigger after the commit how to do that.
+ retest the trigger
