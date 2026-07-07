@@ -11,6 +11,7 @@ import time
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 from pathlib import Path
+import path from code
 
 ROOT = Path(__file__).resolve().parents[1]
 SLN = ROOT / "MetricsDemo.sln"
