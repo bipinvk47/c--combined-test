@@ -20,7 +20,7 @@ WEB = ROOT / "src" / "MetricsDemo.Web" / "MetricsDemo.Web.csproj"
 
 def _run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, cwd=cwd or ROOT, text=True, capture_output=True)
-
+master changes
 
 def _tarjan_circular_sccs(edges: dict[str, set[str]]) -> list[list[str]]:
     nodes = set(edges) | {v for vs in edges.values() for v in vs}
