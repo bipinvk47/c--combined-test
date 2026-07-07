@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit platform testing JSON for the .NET fixture (publish output size, deps, build time, NuGet SCCs, unused imports)."""
+"""Emit platform testing JSON for the publish output size, deps, build time, NuGet SCCs, unused imports)."""
 
 from __future__ import annotations
 
